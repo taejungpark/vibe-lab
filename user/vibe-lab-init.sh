@@ -33,7 +33,7 @@ if [ -n "${ZSH_VERSION:-}" ] || [ "$(basename "$SHELL" 2>/dev/null)" = "zsh" ]; 
 fi
 
 # ── 서버 설정 ──
-PRIMARY_SERVER="${VIBE_PRIMARY:-8asus}"                  # 주력 코딩 (LiteLLM LB)
+LITELLM_SERVER="${VIBE_LITELLM:-CyberSecurity-1G}"       # LiteLLM 로드밸런서 실행 서버
 REASONING_SERVER="${VIBE_REASONING:-CyberSecurity-2G}"  # 추론
 OLLAMA_PORT="11434"
 
@@ -72,17 +72,20 @@ else
     fi
 fi
 
-# ── Step 2: Ollama 서버 연결 확인 ──
-info "Ollama 서버 연결 확인 중..."
+# ── Step 2: 서버 연결 확인 ──
+info "서버 연결 확인 중..."
 
-for label_server in "주력 코딩|${PRIMARY_SERVER}" "추론/설계|${REASONING_SERVER}"; do
-    IFS='|' read -r label server <<< "$label_server"
-    if curl -sf --connect-timeout 3 "http://${server}:${OLLAMA_PORT}/api/tags" &>/dev/null; then
-        ok "  ${server}:${OLLAMA_PORT} ($label)"
-    else
-        warn "  ${server}:${OLLAMA_PORT} ($label) — 연결 실패"
-    fi
-done
+if curl -sf --connect-timeout 3 "http://${LITELLM_SERVER}:4000/health" -H "Authorization: Bearer vibe-lab" &>/dev/null; then
+    ok "  LiteLLM LB (${LITELLM_SERVER}:4000)"
+else
+    warn "  LiteLLM LB (${LITELLM_SERVER}:4000) — 연결 실패"
+fi
+
+if curl -sf --connect-timeout 3 "http://${REASONING_SERVER}:${OLLAMA_PORT}/api/tags" &>/dev/null; then
+    ok "  ${REASONING_SERVER}:${OLLAMA_PORT} (추론/설계)"
+else
+    warn "  ${REASONING_SERVER}:${OLLAMA_PORT} (추론/설계) — 연결 실패"
+fi
 
 # ── Step 3: API 키 입력 (유료 Claude용) ──
 info "Anthropic API 키 설정 (유료 Claude 모델용)..."
@@ -135,7 +138,7 @@ cat >> "$SHELL_RC" << ALIASES
 ${CLOUD_ALIAS}
 
 # ── LiteLLM 로드밸런서 설정 ──
-LITELLM_URL="http://${PRIMARY_SERVER}:4000"
+LITELLM_URL="http://${LITELLM_SERVER}:4000"
 LITELLM_KEY="vibe-lab"
 
 # 로컬 모델 — qwen3-coder-next 로드밸런싱 (8asus GPU 0-5, 최대 6명 동시)
@@ -286,10 +289,9 @@ echo ""
 info "연결 테스트 중..."
 
 response=$(curl -sf --connect-timeout 15 \
-    "http://${PRIMARY_SERVER}:${OLLAMA_PORT}/v1/messages" \
+    "http://${LITELLM_SERVER}:4000/v1/chat/completions" \
     -H "Content-Type: application/json" \
-    -H "x-api-key: ollama" \
-    -H "anthropic-version: 2023-06-01" \
+    -H "Authorization: Bearer vibe-lab" \
     -d "{
         \"model\": \"qwen3-coder-next\",
         \"max_tokens\": 64,
@@ -301,15 +303,12 @@ if [ -n "$response" ]; then
 import sys, json
 try:
     d = json.load(sys.stdin)
-    for b in d.get('content', []):
-        if b.get('type') == 'text':
-            print(b['text'][:60])
-            break
+    print(d['choices'][0]['message']['content'][:60])
 except: print('(파싱 실패)')
 " 2>/dev/null || echo "(파싱 실패)")
-    ok "${PRIMARY_SERVER} 응답: $reply"
+    ok "LiteLLM 응답: $reply"
 else
-    warn "${PRIMARY_SERVER} 연결 실패 — 서버 관리자에게 문의하세요."
+    warn "LiteLLM (${LITELLM_SERVER}:4000) 연결 실패 — 서버 관리자에게 문의하세요."
 fi
 
 # ── 완료 ──
