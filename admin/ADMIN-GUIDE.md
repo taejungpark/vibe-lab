@@ -116,7 +116,7 @@ After=network.target
 Type=simple
 User=ollama
 Environment="OLLAMA_MODELS=/usr/share/ollama/.ollama/models"
-ExecStart=/bin/bash -c 'A=$((%i*2)); B=$((%i*2+1)); CUDA_VISIBLE_DEVICES=${A},${B} OLLAMA_HOST=0.0.0.0:$((11434+%i)) exec /usr/local/bin/ollama serve'
+ExecStart=/bin/bash -c 'CUDA_VISIBLE_DEVICES=$((%i*2)),$((  %i*2+1)) OLLAMA_HOST=0.0.0.0:$((11434+%i)) exec /usr/local/bin/ollama serve'
 Restart=on-failure
 RestartSec=5
 
