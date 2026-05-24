@@ -24,6 +24,7 @@ err()   { echo -e "${RED}[ERROR]${NC} $*"; }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENTS_SRC="${SCRIPT_DIR}/agents"
+COMMANDS_SRC="${SCRIPT_DIR}/commands"
 SHELL_RC="$HOME/.bashrc"
 
 # zsh 지원
@@ -207,7 +208,21 @@ else
     warn "에이전트 디렉토리 없음: $AGENTS_SRC"
 fi
 
-# ── Step 7: MCP 서버 설치 ──
+# ── Step 7: 슬래시 커맨드 배포 ──
+info "슬래시 커맨드 배포 중..."
+
+COMMANDS_DIR="$HOME/.claude/commands"
+mkdir -p "$COMMANDS_DIR"
+
+if [ -d "$COMMANDS_SRC" ]; then
+    cp "$COMMANDS_SRC"/*.md "$COMMANDS_DIR/" 2>/dev/null || true
+    cmd_count=$(ls "$COMMANDS_DIR"/*.md 2>/dev/null | wc -l)
+    ok "${cmd_count}개 커맨드 배포됨 (/debug, /unit-test)"
+else
+    warn "커맨드 디렉토리 없음: $COMMANDS_SRC"
+fi
+
+# ── Step 9: MCP 서버 설치 ──
 info "MCP 서버 설치 중..."
 
 MCP_SERVER="${SCRIPT_DIR}/mcp/server.py"
@@ -266,7 +281,7 @@ else
     fi
 fi
 
-# ── Step 8: 연결 테스트 ──
+# ── Step 10: 연결 테스트 ──
 echo ""
 info "연결 테스트 중..."
 
