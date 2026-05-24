@@ -7,21 +7,18 @@ from mcp.server.fastmcp import FastMCP
 mcp = FastMCP("vibe-lab")
 
 _ENDPOINTS = {
-    "reason":    "http://CyberSecurity-2G:11434",
-    "code":      "http://8asus:11434",
-    "fast_code": "http://4gpu:11434",
+    "reason": "http://CyberSecurity-2G:11434",
+    "code":   "http://8asus:11434",
 }
 
 _MODELS = {
-    "reason":    "qwq:32b",
-    "code":      "qwen3-coder-next",
-    "fast_code": "qwen3-coder:30b",
+    "reason": "qwq:32b",
+    "code":   "qwen3-coder-next",
 }
 
 _TIMEOUTS = {
-    "reason":    600,
-    "code":      300,
-    "fast_code": 180,
+    "reason": 600,
+    "code":   300,
 }
 
 
@@ -73,19 +70,6 @@ async def reason_then_code(prompt: str) -> str:
         {"role": "user", "content": prompt},
     ])
     return f"## 추론\n\n{reasoning}\n\n## 구현\n\n{implementation}"
-
-
-@mcp.tool()
-async def fast_code(prompt: str, context: str = "") -> str:
-    """
-    4gpu의 qwen3-coder:30b로 빠르게 코드를 생성합니다.
-    디버깅, 유닛 테스트, 빠른 반복 작업에 적합합니다.
-    """
-    messages = []
-    if context:
-        messages.append({"role": "system", "content": f"컨텍스트:\n{context}"})
-    messages.append({"role": "user", "content": prompt})
-    return await _chat("fast_code", messages)
 
 
 if __name__ == "__main__":

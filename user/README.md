@@ -92,7 +92,6 @@ claude-cloud   # Anthropic API — 유료 Claude (최고 품질)
 | `reason` | CyberSecurity-2G | qwq:32b | 설계, 아키텍처, 문제 분석 |
 | `code` | 8asus | qwen3-coder-next | 코드 구현 |
 | `reason_then_code` | cyber2 → 8asus | 파이프라인 | 자동 설계 후 구현 |
-| `fast_code` | 4gpu | qwen3-coder:30b | 빠른 코드 생성 |
 
 ```
 # 명시적 분리 (설계 검토 후 구현)
@@ -125,8 +124,8 @@ claude-cloud   # Anthropic API — 유료 Claude (최고 품질)
 
 | 커맨드 | 동작 |
 |--------|------|
-| `/debug` | `reason` → `fast_code` 순으로 버그 분석·수정 |
-| `/unit-test` | `reason` → `fast_code` 순으로 테스트 설계·작성 |
+| `/debug` | `reason` → `code` 순으로 버그 분석·수정 |
+| `/unit-test` | `reason` → `code` 순으로 테스트 설계·작성 |
 
 ```
 /debug
@@ -163,7 +162,6 @@ Ollama는 첫 요청 시 모델을 GPU에 로드합니다. 32B 모델은 30초~1
 ```bash
 curl http://8asus:11434/api/tags
 curl http://CyberSecurity-2G:11434/api/tags
-curl http://4gpu:11434/api/tags
 ```
 
 ### MCP 도구가 안 보임

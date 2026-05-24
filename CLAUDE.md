@@ -20,7 +20,6 @@ User Workstation (Claude Code)
 MCP Server (stdio, runs on user's machine)
   ├─ reason          → CyberSecurity-2G / qwq:32b   (600s timeout)
   ├─ code            → 8asus / qwen3-coder-next      (300s timeout)
-  ├─ fast_code       → 4gpu / qwen3-coder:30b        (180s timeout)
   └─ reason_then_code → pipelines reason → code automatically
 ```
 
@@ -31,7 +30,7 @@ Claude Code connects to Ollama via `ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN=
 | File | Purpose |
 |------|---------|
 | `user/vibe-lab-init.sh` | One-shot user setup: installs Claude Code, writes shell aliases, creates `~/.claude/settings.json`, deploys agents, registers the MCP server |
-| `user/mcp/server.py` | FastMCP server exposing `reason`, `code`, `fast_code`, `reason_then_code` tools |
+| `user/mcp/server.py` | FastMCP server exposing `reason`, `code`, `reason_then_code` tools |
 | `user/agents/*.md` | Sub-agent definitions deployed to `~/.claude/agents/` |
 | `admin/litellm/config.yaml` | LiteLLM router — round-robin across 8asus GPU instances |
 | `admin/mcp-server/server.py` | Admin-side MCP server (same logic, different path) |
@@ -52,7 +51,7 @@ The script writes aliases into the shell RC between `# >>> vibe-lab 설정` and 
 
 Server defaults can be overridden before running:
 ```bash
-VIBE_PRIMARY=8asus VIBE_REASONING=CyberSecurity-2G VIBE_FAST=4gpu ./vibe-lab-init.sh
+VIBE_PRIMARY=8asus VIBE_REASONING=CyberSecurity-2G ./vibe-lab-init.sh
 ```
 
 ## Admin Operations
@@ -71,16 +70,16 @@ VIBE_PRIMARY=8asus VIBE_REASONING=CyberSecurity-2G VIBE_FAST=4gpu ./vibe-lab-ini
 sudo systemctl restart litellm-vibe
 curl -s http://localhost:4000/v1/models -H "Authorization: Bearer vibe-lab" | python3 -m json.tool
 
-# 8asus per-GPU instance management
-ssh 8asus "sudo systemctl restart ollama-gpu@3"
-ssh 8asus "journalctl -u 'ollama-gpu@*' --no-pager -n 20"
+# 8asus GPU pair instance management
+ssh 8asus "sudo systemctl restart ollama-pair@1"
+ssh 8asus "journalctl -u 'ollama-pair@*' --no-pager -n 20"
 
 # Yield GPUs 6-7 to DL research and reclaim
-ssh 8asus "sudo systemctl stop ollama-gpu@6 ollama-gpu@7"
-ssh 8asus "sudo systemctl start ollama-gpu@6 ollama-gpu@7"
+ssh 8asus "sudo systemctl stop ollama-pair@3"
+ssh 8asus "sudo systemctl start ollama-pair@3"
 ```
 
-All SSH connections use port 8510. SSH config must have `Port 8510` for the four host aliases.
+All SSH connections use port 8510. SSH config must have `Port 8510` for the host aliases.
 
 ## MCP Server
 
@@ -100,7 +99,7 @@ Agents in `user/agents/` use YAML frontmatter with `name`, `description`, `model
 
 ## Slash Commands
 
-`/debug` and `/unit-test` are installed to `~/.claude/commands/` by the init script. They follow the pattern: call `reason` for analysis/design, then `fast_code` for implementation.
+`/debug` and `/unit-test` are installed to `~/.claude/commands/` by the init script. They follow the pattern: call `reason` for analysis/design, then `code` for implementation.
 
 ## Choosing the Right Entry Point
 

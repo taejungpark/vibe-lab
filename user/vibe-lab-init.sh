@@ -32,10 +32,8 @@ if [ -n "${ZSH_VERSION:-}" ] || [ "$(basename "$SHELL" 2>/dev/null)" = "zsh" ]; 
 fi
 
 # ── 서버 설정 ──
-PRIMARY_SERVER="${VIBE_PRIMARY:-8asus}"          # 주력 코딩
+PRIMARY_SERVER="${VIBE_PRIMARY:-8asus}"                  # 주력 코딩 (LiteLLM LB)
 REASONING_SERVER="${VIBE_REASONING:-CyberSecurity-2G}"  # 추론
-FAST_SERVER="${VIBE_FAST:-4gpu}"                  # 경량
-AUX_SERVER="${VIBE_AUX:-8gpu}"                    # 코딩 보조
 OLLAMA_PORT="11434"
 
 echo ""
@@ -76,7 +74,7 @@ fi
 # ── Step 2: Ollama 서버 연결 확인 ──
 info "Ollama 서버 연결 확인 중..."
 
-for label_server in "주력 코딩|${PRIMARY_SERVER}" "추론/설계|${REASONING_SERVER}" "경량|${FAST_SERVER}" "코딩 보조|${AUX_SERVER}"; do
+for label_server in "주력 코딩|${PRIMARY_SERVER}" "추론/설계|${REASONING_SERVER}"; do
     IFS='|' read -r label server <<< "$label_server"
     if curl -sf --connect-timeout 3 "http://${server}:${OLLAMA_PORT}/api/tags" &>/dev/null; then
         ok "  ${server}:${OLLAMA_PORT} ($label)"
