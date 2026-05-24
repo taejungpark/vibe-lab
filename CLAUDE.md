@@ -13,14 +13,9 @@ This is the **vibe-lab** release package — a deployment kit for running Claude
 
 ```
 User Workstation (Claude Code)
-  ├─ claude-local    → LiteLLM :4000   qwen3-coder:30b LB (primary, multi-user)
-  ├─ claude-next     → 8asus:11434     Qwen3-Coder-Next   (high quality, single user)
-  ├─ claude-reason-lb → LiteLLM :4000  qwq:32b × 8        (reasoning, load-balanced)
-  ├─ claude-reason   → CyberSecurity-2G:11434  qwq:32b    (reasoning, single)
-  ├─ claude-fast     → 4gpu:11434      qwen3-coder:30b    (direct)
-  ├─ claude-8gpu     → 8gpu:11434      qwen3-coder:30b    (direct)
-  ├─ claude-cloud    → Anthropic API   paid Claude        (highest quality)
-  └─ claude-v2-reason → LiteLLM :4000  qwq:32b-vllm       (on-demand)
+  ├─ claude-local  → LiteLLM :4000  qwen3-coder-next LB  (8asus GPU 0-5, 2GPU/instance, max 3 users)
+  ├─ claude-reason → cyber2:11434   qwq:32b              (reasoning/design)
+  └─ claude-cloud  → Anthropic API  paid Claude          (highest quality)
 
 MCP Server (stdio, runs on user's machine)
   ├─ reason          → CyberSecurity-2G / qwq:32b   (600s timeout)
@@ -111,10 +106,8 @@ Agents in `user/agents/` use YAML frontmatter with `name`, `description`, `model
 
 | Situation | Use |
 |-----------|-----|
-| General coding (multi-user) | `claude-local` |
-| High-quality coding (single user) | `claude-next` |
-| Architecture / complex reasoning | `claude-reason-lb` |
-| Up to 8 concurrent reasoning sessions | `claude-reason-lb` |
+| General coding (up to 3 concurrent, full GPU) | `claude-local` |
+| Architecture / complex reasoning | `claude-reason` |
 | Highest quality needed | `claude-cloud` |
 
 ## Model Quantization Note

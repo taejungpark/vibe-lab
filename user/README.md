@@ -60,29 +60,22 @@ VS Code Remote-WSL 확장이 자동 설치되며, 이후 VS Code에서 Claude Co
 ### LiteLLM 로드밸런서 경유 (기본)
 
 ```bash
-claude-local      # 4gpu + 8gpu — Qwen3-Coder 30B 로드밸런싱 (다중 사용자)
-claude-reason-lb  # 8asus GPU ×8 — QwQ-32B 로드밸런싱   (최대 8명 동시)
-claude-v2-reason  # 4gpu vLLM    — QwQ-32B on-demand
+claude-local   # 8asus GPU 0-5 — Qwen3-Coder-Next LB (최대 3명 동시, full GPU)
 ```
 
 ### Ollama 직접 연결
 
 ```bash
-claude-next       # 8asus   — Qwen3-Coder-Next 80B MoE (고품질, 단독)
-claude-reason     # cyber2  — QwQ-32B                  (추론/설계, 단일)
-claude-fast       # 4gpu    — Qwen3-Coder 30B           (직접 연결)
-claude-8gpu       # 8gpu    — Qwen3-Coder 30B           (직접 연결)
-claude-cloud      # Anthropic API — 유료 Claude          (최고 품질)
+claude-reason  # cyber2 — QwQ-32B (추론/설계)
+claude-cloud   # Anthropic API — 유료 Claude (최고 품질)
 ```
 
 ### 언제 어떤 alias를 쓸까
 
 | 상황 | 추천 |
 |------|------|
-| 일반 코딩 (다중 사용자) | `claude-local` |
-| 아키텍처 설계, 복잡한 추론 | `claude-reason-lb` |
-| 고품질 코딩 (혼자 쓸 때) | `claude-next` |
-| 여러 명이 동시에 추론 | `claude-reason-lb` (8명 동시 가능) |
+| 코딩 (구현, 수정, 리팩토링) | `claude-local` |
+| 아키텍처 설계, 복잡한 추론 | `claude-reason` |
 | 최고 품질 필요 | `claude-cloud` |
 
 ---

@@ -7,19 +7,15 @@
 INTERVAL="${1:-3}"
 SSH="ssh -p 8510 -o ConnectTimeout=2 -o BatchMode=yes"
 
-declare -a SERVERS=("8asus" "CyberSecurity-2G" "4gpu" "8gpu")
+declare -a SERVERS=("8asus" "CyberSecurity-2G")
 declare -A ROLES=(
-    ["8asus"]="주력코딩(단독)"
+    ["8asus"]="코딩LB(×3, GPU0-5 full)"
     ["CyberSecurity-2G"]="추론"
-    ["4gpu"]="코딩LB(×2)"
-    ["8gpu"]="코딩LB(×4)"
 )
 # 서버별 활성 포트 목록 (공백 구분)
 declare -A PORTS=(
-    ["8asus"]="11434"
+    ["8asus"]="11434 11435 11436"
     ["CyberSecurity-2G"]="11434"
-    ["4gpu"]="11434 11435"
-    ["8gpu"]="11434 11435 11436 11437"
 )
 
 RED='\033[0;31m'
@@ -101,6 +97,7 @@ while true; do
             util=$(echo "$util" | tr -d ' ')
             temp=$(echo "$temp" | tr -d ' ')
             name=$(echo "$name" | xargs)
+            [ -z "$mem_total" ] || [ "$mem_total" -eq 0 ] 2>/dev/null && continue
             mem_pct=$(( mem_used * 100 / mem_total ))
             total_used=$(( total_used + mem_used ))
             total_total=$(( total_total + mem_total ))

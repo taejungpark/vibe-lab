@@ -139,52 +139,22 @@ ${CLOUD_ALIAS}
 LITELLM_URL="http://${PRIMARY_SERVER}:4000"
 LITELLM_KEY="vibe-lab"
 
-# 로컬 모델 — qwen3-coder:30b 로드밸런싱 (4gpu + 8gpu, 다중 사용자)
+# 로컬 모델 — qwen3-coder-next 로드밸런싱 (8asus GPU 0-5, 최대 6명 동시)
 alias claude-local='ANTHROPIC_AUTH_TOKEN="\${LITELLM_KEY}" \\
   ANTHROPIC_BASE_URL="\${LITELLM_URL}" \\
   ANTHROPIC_API_KEY="\${LITELLM_KEY}" \\
-  claude --model qwen3-coder:30b'
-
-# 로컬 모델 — 8asus Qwen3-Coder-Next 80B MoE (고품질, 단독 사용)
-alias claude-next='ANTHROPIC_AUTH_TOKEN=ollama \\
-  ANTHROPIC_BASE_URL="http://${PRIMARY_SERVER}:${OLLAMA_PORT}" \\
-  ANTHROPIC_API_KEY="" \\
   claude --model qwen3-coder-next'
 
-# 로컬 모델 — cyber2 QwQ-32B (추론/설계, 단일)
+# 로컬 모델 — cyber2 QwQ-32B (추론/설계)
 alias claude-reason='ANTHROPIC_AUTH_TOKEN=ollama \\
   ANTHROPIC_BASE_URL="http://${REASONING_SERVER}:${OLLAMA_PORT}" \\
   ANTHROPIC_API_KEY="" \\
   claude --model qwq:32b'
 
-# 로컬 모델 — 4gpu Qwen3-Coder 30B (직접 연결)
-alias claude-fast='ANTHROPIC_AUTH_TOKEN=ollama \\
-  ANTHROPIC_BASE_URL="http://${FAST_SERVER}:${OLLAMA_PORT}" \\
-  ANTHROPIC_API_KEY="" \\
-  claude --model qwen3-coder:30b'
-
-# 로컬 모델 — 8gpu Qwen3-Coder 30B (직접 연결)
-alias claude-8gpu='ANTHROPIC_AUTH_TOKEN=ollama \\
-  ANTHROPIC_BASE_URL="http://${AUX_SERVER}:${OLLAMA_PORT}" \\
-  ANTHROPIC_API_KEY="" \\
-  claude --model qwen3-coder:30b'
-
-# 추론/설계 — qwq:32b 로드밸런싱 (8asus GPU ×8, 최대 8명 동시)
-alias claude-reason-lb='ANTHROPIC_AUTH_TOKEN="\${LITELLM_KEY}" \\
-  ANTHROPIC_BASE_URL="\${LITELLM_URL}" \\
-  ANTHROPIC_API_KEY="\${LITELLM_KEY}" \\
-  claude --model qwq:32b-lb'
-
-# 추론/설계 — qwq:32b vLLM (4gpu on-demand)
-alias claude-v2-reason='ANTHROPIC_AUTH_TOKEN="\${LITELLM_KEY}" \\
-  ANTHROPIC_BASE_URL="\${LITELLM_URL}" \\
-  ANTHROPIC_API_KEY="\${LITELLM_KEY}" \\
-  claude --model qwq:32b-vllm'
-
 # <<< vibe-lab 설정 <<<
 ALIASES
 
-ok "alias 추가됨: claude-cloud, claude-local, claude-next, claude-reason, claude-fast, claude-8gpu, claude-reason-lb, claude-v2-reason"
+ok "alias 추가됨: claude-cloud, claude-local, claude-reason"
 
 # ── Step 5: Claude Code settings.json ──
 info "Claude Code settings.json 설정 중..."
@@ -338,14 +308,10 @@ echo "  새 터미널을 열거나:"
 echo -e "    ${CYAN}source ${SHELL_RC}${NC}"
 echo ""
 echo "  사용법:"
-echo -e "    ${CYAN}claude-local${NC}     Qwen3-Coder 30B 로드밸런싱 (4gpu + 8gpu, 다중 사용자)"
-echo -e "    ${CYAN}claude-next${NC}      8asus Qwen3-Coder-Next 80B MoE (고품질, 단독)"
-echo -e "    ${CYAN}claude-reason-lb${NC} QwQ-32B 로드밸런싱 (8asus GPU ×8, 최대 8명 동시)"
-echo -e "    ${CYAN}claude-reason${NC}    cyber2 QwQ-32B (추론/설계, 단일)"
-echo -e "    ${CYAN}claude-fast${NC}      4gpu Qwen3-Coder 30B (직접 연결)"
-echo -e "    ${CYAN}claude-8gpu${NC}      8gpu Qwen3-Coder 30B (직접 연결)"
+echo -e "    ${CYAN}claude-local${NC}    Qwen3-Coder-Next LB (8asus GPU 0-5, 최대 3명 동시)"
+echo -e "    ${CYAN}claude-reason${NC}   cyber2 QwQ-32B (추론/설계)"
 if [ "$ANTHROPIC_API_KEY" != "skip" ]; then
-echo -e "    ${CYAN}claude-cloud${NC}     유료 Claude (Opus/Sonnet)"
+echo -e "    ${CYAN}claude-cloud${NC}    유료 Claude (Opus/Sonnet)"
 fi
 echo ""
 echo "  에이전트: claude-local 실행 후 /agents"

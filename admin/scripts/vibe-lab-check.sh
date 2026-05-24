@@ -23,14 +23,10 @@ echo -e "${BLUE}[Ollama 인스턴스]${NC}"
 
 # 형식: "서버|포트|모델|설명"
 declare -a SERVERS=(
-    "8asus|11434|qwen3-coder-next|주력 코딩 (단독)"
+    "8asus|11434|qwen3-coder-next|코딩 LB (GPU 0-1, full)"
+    "8asus|11435|qwen3-coder-next|코딩 LB (GPU 2-3, full)"
+    "8asus|11436|qwen3-coder-next|코딩 LB (GPU 4-5, full)"
     "CyberSecurity-2G|11434|qwq:32b|추론/설계"
-    "4gpu|11434|qwen3-coder:30b|코딩 LB (GPU 0-1)"
-    "4gpu|11435|qwen3-coder:30b|코딩 LB (GPU 2-3)"
-    "8gpu|11434|qwen3-coder:30b|코딩 LB (GPU 0-1)"
-    "8gpu|11435|qwen3-coder:30b|코딩 LB (GPU 2-3)"
-    "8gpu|11436|qwen3-coder:30b|코딩 LB (GPU 4-5)"
-    "8gpu|11437|qwen3-coder:30b|코딩 LB (GPU 6-7)"
 )
 
 healthy=0
@@ -66,7 +62,7 @@ echo -e "${BLUE}[Tool Calling 테스트]${NC}"
 for entry in "${SERVERS[@]}"; do
     IFS='|' read -r server port model role <<< "$entry"
 
-    response=$(curl -sf --connect-timeout 15 "http://${server}:${port}/v1/messages" \
+    response=$(curl -sf --connect-timeout 90 "http://${server}:${port}/v1/messages" \
         -H "Content-Type: application/json" \
         -H "x-api-key: ollama" \
         -H "anthropic-version: 2023-06-01" \
@@ -98,7 +94,7 @@ done
 echo ""
 echo -e "${BLUE}[GPU 사용 현황]${NC}"
 
-for server in 8asus CyberSecurity-2G 4gpu 8gpu; do
+for server in 8asus CyberSecurity-2G; do
     gpu_info=$($SSH "$server" \
         "nvidia-smi --query-gpu=index,memory.used,memory.total,utilization.gpu,temperature.gpu --format=csv,noheader,nounits" \
         2>/dev/null)

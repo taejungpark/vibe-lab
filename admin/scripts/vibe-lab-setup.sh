@@ -32,8 +32,6 @@ SSH="ssh -p 8510 -o ConnectTimeout=5 -o BatchMode=yes"
 declare -a DEPLOYMENTS=(
     "8asus|qwen3-coder-next|주력 코딩 (80B MoE)|"
     "CyberSecurity-2G|qwq:32b|추론/설계 (32B)|/media1/ollama/models"
-    "4gpu|qwen3-coder:30b|코딩 (30B MoE)|"
-    "8gpu|qwen3-coder:30b|코딩 (30B MoE)|"
 )
 
 echo ""
@@ -156,20 +154,16 @@ for entry in "${DEPLOYMENTS[@]}"; do
     fi
 done
 
-# ── Step 5: GPU 페어 멀티 인스턴스 설정 (4gpu × 2, 8gpu × 4) ──
-info "GPU 페어 멀티 인스턴스 설정 중..."
+# ── Step 5: 멀티 인스턴스 설정 ──
+info "멀티 인스턴스 설정 중..."
 
-declare -A PAIR_COUNT=(["4gpu"]=2 ["8gpu"]=4)
+# 8asus: GPU 페어별 qwen3-coder-next 인스턴스 (GPU 0-5, 3인스턴스 full GPU)
+# GPU 6-7은 DL 개발용으로 예약
+info "  8asus — qwen3-coder-next 3개 인스턴스 설정 중 (GPU 페어 0-1/2-3/4-5)..."
 
-for server in "4gpu" "8gpu"; do
-    count="${PAIR_COUNT[$server]}"
-    info "  $server — ${count}개 인스턴스 설정 중 (포트 11434–$((11433 + count)))..."
+ssh -p 8510 8asus "sudo systemctl stop ollama 2>/dev/null; sudo systemctl disable ollama 2>/dev/null" || true
 
-    # 기존 단일 Ollama 서비스 비활성화
-    $SSH "$server" "sudo systemctl stop ollama 2>/dev/null; sudo systemctl disable ollama 2>/dev/null" || true
-
-    # GPU 페어 template 서비스 생성 (%i = 인스턴스 번호, GPU_A/B = i*2, i*2+1)
-    $SSH "$server" "sudo tee /etc/systemd/system/ollama-pair@.service > /dev/null" << 'UNIT'
+ssh -p 8510 8asus "sudo tee /etc/systemd/system/ollama-pair@.service > /dev/null" << 'UNIT'
 [Unit]
 Description=vibe-lab Ollama GPU-pair %i
 After=network.target
@@ -186,14 +180,12 @@ RestartSec=5
 WantedBy=multi-user.target
 UNIT
 
-    $SSH "$server" "sudo systemctl daemon-reload"
-
-    for (( i=0; i<count; i++ )); do
-        PORT=$(( 11434 + i ))
-        $SSH "$server" "sudo systemctl enable ollama-pair@${i} && sudo systemctl start ollama-pair@${i}" 2>/dev/null
-        $SSH "$server" "sudo ufw allow ${PORT}/tcp 2>/dev/null || sudo iptables -I INPUT -p tcp --dport ${PORT} -j ACCEPT 2>/dev/null" || true
-        ok "    GPU 페어 $i (GPU $((i*2))-$((i*2+1)), 포트 ${PORT}) 시작됨"
-    done
+ssh -p 8510 8asus "sudo systemctl daemon-reload"
+for i in 0 1 2; do
+    PORT=$(( 11434 + i ))
+    ssh -p 8510 8asus "sudo systemctl enable ollama-pair@${i} && sudo systemctl start ollama-pair@${i}" 2>/dev/null
+    ssh -p 8510 8asus "sudo ufw allow ${PORT}/tcp 2>/dev/null || sudo iptables -I INPUT -p tcp --dport ${PORT} -j ACCEPT 2>/dev/null" || true
+    ok "    GPU 페어 $i (GPU $((i*2))-$((i*2+1)), 포트 ${PORT}) 시작됨"
 done
 
 # ── Step 6: 방화벽 확인 (포트 11434) ──
@@ -261,11 +253,9 @@ echo "════════════════════════�
 echo -e "  ${GREEN}설치 완료!${NC}"
 echo ""
 echo "  사용법:"
-echo -e "    ${CYAN}claude-local${NC}     → Qwen3-Coder 30B LB (4gpu ×2 + 8gpu ×4)"
-echo -e "    ${CYAN}claude-next${NC}      → 8asus Qwen3-Coder-Next (고품질, 단독)"
-echo -e "    ${CYAN}claude-reason-lb${NC} → QwQ-32B LB (8asus GPU ×8)"
-echo -e "    ${CYAN}claude-reason${NC}    → cyber2 QwQ-32B"
-echo -e "    ${CYAN}claude-cloud${NC}     → 유료 Claude API"
+echo -e "    ${CYAN}claude-local${NC}    → Qwen3-Coder-Next LB (8asus GPU 0-5, 3인스턴스 full GPU)"
+echo -e "    ${CYAN}claude-reason${NC}   → cyber2 QwQ-32B (추론/설계)"
+echo -e "    ${CYAN}claude-cloud${NC}    → 유료 Claude API"
 echo ""
 echo "  클러스터 상태 확인:"
 echo "    ./vibe-lab-check.sh"

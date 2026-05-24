@@ -1,118 +1,37 @@
 model_list:
-  # ── 주력 코딩: 8asus qwen3-coder-next ──────────────────────────────
-  - model_name: qwen3-coder-next
+  # ── claude-local: 8asus qwen3-coder-next GPU 페어별 분산 (GPU 0-5, 3인스턴스 full GPU) ──
+  - model_name: qwen3-coder-next   # GPU 0-1
     litellm_params:
       model: openai/qwen3-coder-next
       api_base: http://8asus:11434/v1
       api_key: ollama
 
-  # ── claude-local: 4gpu(×2) + 8gpu(×4) GPU 페어별 분산 (qwen3-coder:30b) ──
-  - model_name: qwen3-coder:30b   # 4gpu GPU 0-1
+  - model_name: qwen3-coder-next   # GPU 2-3
     litellm_params:
-      model: openai/qwen3-coder:30b
-      api_base: http://4gpu:11434/v1
+      model: openai/qwen3-coder-next
+      api_base: http://8asus:11435/v1
       api_key: ollama
 
-  - model_name: qwen3-coder:30b   # 4gpu GPU 2-3
+  - model_name: qwen3-coder-next   # GPU 4-5
     litellm_params:
-      model: openai/qwen3-coder:30b
-      api_base: http://4gpu:11435/v1
+      model: openai/qwen3-coder-next
+      api_base: http://8asus:11436/v1
       api_key: ollama
 
-  - model_name: qwen3-coder:30b   # 8gpu GPU 0-1
-    litellm_params:
-      model: openai/qwen3-coder:30b
-      api_base: http://8gpu:11434/v1
-      api_key: ollama
-
-  - model_name: qwen3-coder:30b   # 8gpu GPU 2-3
-    litellm_params:
-      model: openai/qwen3-coder:30b
-      api_base: http://8gpu:11435/v1
-      api_key: ollama
-
-  - model_name: qwen3-coder:30b   # 8gpu GPU 4-5
-    litellm_params:
-      model: openai/qwen3-coder:30b
-      api_base: http://8gpu:11436/v1
-      api_key: ollama
-
-  - model_name: qwen3-coder:30b   # 8gpu GPU 6-7
-    litellm_params:
-      model: openai/qwen3-coder:30b
-      api_base: http://8gpu:11437/v1
-      api_key: ollama
-
-  # ── 추론/설계: CyberSecurity-2G qwq:32b (Ollama, 단일) ───────────
+  # ── claude-reason: CyberSecurity-2G qwq:32b (단독) ───────────────────────
   - model_name: qwq:32b
     litellm_params:
       model: openai/qwq:32b
       api_base: http://CyberSecurity-2G:11434/v1
       api_key: ollama
 
-  # ── 추론/설계: 8asus qwq:32b × 8 (Ollama 로드밸런싱) ─────────────
-  - model_name: qwq:32b-lb
-    litellm_params:
-      model: openai/qwq:32b
-      api_base: http://8asus:11434/v1
-      api_key: ollama
-
-  - model_name: qwq:32b-lb
-    litellm_params:
-      model: openai/qwq:32b
-      api_base: http://8asus:11435/v1
-      api_key: ollama
-
-  - model_name: qwq:32b-lb
-    litellm_params:
-      model: openai/qwq:32b
-      api_base: http://8asus:11436/v1
-      api_key: ollama
-
-  - model_name: qwq:32b-lb
-    litellm_params:
-      model: openai/qwq:32b
-      api_base: http://8asus:11437/v1
-      api_key: ollama
-
-  - model_name: qwq:32b-lb
-    litellm_params:
-      model: openai/qwq:32b
-      api_base: http://8asus:11438/v1
-      api_key: ollama
-
-  - model_name: qwq:32b-lb
-    litellm_params:
-      model: openai/qwq:32b
-      api_base: http://8asus:11439/v1
-      api_key: ollama
-
-  - model_name: qwq:32b-lb
-    litellm_params:
-      model: openai/qwq:32b
-      api_base: http://8asus:11440/v1
-      api_key: ollama
-
-  - model_name: qwq:32b-lb
-    litellm_params:
-      model: openai/qwq:32b
-      api_base: http://8asus:11441/v1
-      api_key: ollama
-
-  # ── vLLM 버전 (on-demand, 4gpu) ───────────────────────────────────
-  - model_name: qwq:32b-vllm
-    litellm_params:
-      model: openai/qwq:32b
-      api_base: http://4gpu:8000/v1
-      api_key: dummy
-
 router_settings:
-  routing_strategy: round-robin   # 순환 분산 (8인스턴스 고른 활용)
+  routing_strategy: round-robin
   num_retries: 2
   retry_after: 5
 
 litellm_settings:
-  drop_params: true              # 지원하지 않는 파라미터 무시
+  drop_params: true
   request_timeout: 600
 
 general_settings:
