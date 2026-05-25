@@ -157,16 +157,19 @@ done
 # ── Step 5: 멀티 인스턴스 설정 ──
 info "멀티 인스턴스 설정 중..."
 
-# 8asus: GPU 0-1-2 (triple) — qwen3-coder-next 80B, GPU 3,4,5 (single) — qwen2.5-coder:32b Q4_K_M
+# 8asus: GPU 0-1-2 (triple@0) / GPU 3-4-5 (triple@1) — qwen3-coder-next 80B 각각
 # GPU 6-7은 DL 개발용으로 예약
-info "  8asus — GPU 0-1-2: qwen3-coder-next 80B (triple), GPU 3-5: qwen2.5-coder:32b (single)..."
+info "  8asus — GPU 0-2: qwen3-coder-next 80B (triple@0), GPU 3-5: qwen3-coder-next 80B (triple@1)..."
 
-ssh -p 8510 8asus "sudo systemctl stop ollama 2>/dev/null; sudo systemctl disable ollama 2>/dev/null; sudo systemctl stop 'ollama-pair@*' 2>/dev/null; sudo systemctl disable 'ollama-pair@0' 'ollama-pair@1' 'ollama-pair@2' 2>/dev/null" || true
+ssh -p 8510 8asus "sudo systemctl stop ollama 2>/dev/null; sudo systemctl disable ollama 2>/dev/null
+  sudo systemctl stop 'ollama-pair@*' 'ollama-triple' 'ollama-single@*' 2>/dev/null
+  sudo systemctl disable 'ollama-pair@0' 'ollama-pair@1' 'ollama-pair@2' 'ollama-triple' 2>/dev/null
+  sudo systemctl disable 'ollama-single@3' 'ollama-single@4' 'ollama-single@5' 2>/dev/null" || true
 
-# GPU 0-1-2 묶음 인스턴스 (80B, context 16384)
-ssh -p 8510 8asus "sudo tee /etc/systemd/system/ollama-triple.service > /dev/null" << 'UNIT'
+# triple@ 템플릿: instance 0 → GPU 0-1-2 port 11434, instance 1 → GPU 3-4-5 port 11435
+ssh -p 8510 8asus "sudo tee /etc/systemd/system/ollama-triple@.service > /dev/null" << 'UNIT'
 [Unit]
-Description=vibe-lab Ollama GPU-triple 0-1-2 (qwen3-coder-next 80B)
+Description=vibe-lab Ollama GPU-triple %i (qwen3-coder-next 80B)
 After=network.target
 
 [Service]
@@ -175,30 +178,7 @@ User=ollama
 Environment="OLLAMA_MODELS=/usr/share/ollama/.ollama/models"
 Environment="OLLAMA_CONTEXT_LENGTH=16384"
 Environment="OLLAMA_FLASH_ATTN=1"
-Environment="CUDA_VISIBLE_DEVICES=0,1,2"
-Environment="OLLAMA_HOST=0.0.0.0:11434"
-ExecStart=/usr/local/bin/ollama serve
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-UNIT
-
-# GPU 3,4,5 단일 인스턴스 템플릿 (32B Q4_K_M, context 8192)
-# port = 11432 + GPU번호  →  GPU3:11435, GPU4:11436, GPU5:11437
-ssh -p 8510 8asus "sudo tee /etc/systemd/system/ollama-single@.service > /dev/null" << 'UNIT'
-[Unit]
-Description=vibe-lab Ollama single GPU %i (qwen2.5-coder-32b)
-After=network.target
-
-[Service]
-Type=simple
-User=ollama
-Environment="OLLAMA_MODELS=/usr/share/ollama/.ollama/models"
-Environment="OLLAMA_CONTEXT_LENGTH=8192"
-Environment="OLLAMA_FLASH_ATTN=1"
-ExecStart=/bin/bash -c 'CUDA_VISIBLE_DEVICES=%i OLLAMA_HOST=0.0.0.0:$((11432+%i)) exec /usr/local/bin/ollama serve'
+ExecStart=/bin/bash -c 'CUDA_VISIBLE_DEVICES=$((%i*3)),$((  %i*3+1)),$((  %i*3+2)) OLLAMA_HOST=0.0.0.0:$((11434+%i)) exec /usr/local/bin/ollama serve'
 Restart=on-failure
 RestartSec=5
 
@@ -208,18 +188,12 @@ UNIT
 
 ssh -p 8510 8asus "sudo systemctl daemon-reload"
 
-# qwen2.5-coder:32b Q4_K_M pull (없으면)
-ssh -p 8510 8asus "ollama list | grep -q 'qwen2.5-coder:32b' || OLLAMA_HOST=localhost:11434 ollama pull qwen2.5-coder:32b"
-
-ssh -p 8510 8asus "sudo systemctl enable ollama-triple && sudo systemctl start ollama-triple"
-ssh -p 8510 8asus "sudo ufw allow 11434/tcp 2>/dev/null" || true
-ok "    GPU 0-1-2 triple (포트 11434, qwen3-coder-next 80B) 시작됨"
-
-for i in 3 4 5; do
-    PORT=$(( 11432 + i ))
-    ssh -p 8510 8asus "sudo systemctl enable ollama-single@${i} && sudo systemctl start ollama-single@${i}"
+for i in 0 1; do
+    PORT=$(( 11434 + i ))
+    GPU_START=$(( i * 3 ))
+    ssh -p 8510 8asus "sudo systemctl enable ollama-triple@${i} && sudo systemctl start ollama-triple@${i}"
     ssh -p 8510 8asus "sudo ufw allow ${PORT}/tcp 2>/dev/null" || true
-    ok "    GPU ${i} single (포트 ${PORT}, qwen2.5-coder:32b) 시작됨"
+    ok "    GPU triple@${i} (GPU ${GPU_START}-$((GPU_START+2)), 포트 ${PORT}) 시작됨"
 done
 
 # CyberSecurity-2G: GPU 0은 기존 ollama.service(qwq:32b), GPU 1에 두 번째 인스턴스 추가

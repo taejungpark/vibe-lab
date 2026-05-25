@@ -58,18 +58,16 @@ VS Code Remote-WSL 확장이 자동 설치되며, 이후 VS Code에서 Claude Co
 ## 진입 명령 (alias)
 
 ```bash
-claude-local    # 8asus GPU 3-5 — Qwen2.5-Coder-32B LB  (최대 3명 동시, ~30 t/s)
-claude-highend  # 8asus GPU 0-1-2 — Qwen3-Coder-Next 80B (단독, ~66 t/s)
-claude-reason   # cyber2 — QwQ-32B                        (추론/설계)
-claude-cloud    # Anthropic API — 유료 Claude              (최고 품질)
+claude-local   # 8asus — Qwen3-Coder-Next 80B LB (GPU 0-2 / 3-5, 최대 2명 동시, ~66 t/s)
+claude-reason  # cyber2 — QwQ-32B                 (추론/설계)
+claude-cloud   # Anthropic API — 유료 Claude       (최고 품질)
 ```
 
 ### 언제 어떤 alias를 쓸까
 
 | 상황 | 추천 |
 |------|------|
-| 일반 코딩 (구현, 수정, 리팩토링) | `claude-local` |
-| 복잡한 코딩, 대형 리팩토링 | `claude-highend` |
+| 코딩 (구현, 수정, 리팩토링) | `claude-local` |
 | 아키텍처 설계, 복잡한 추론 | `claude-reason` |
 | 최고 품질 필요 | `claude-cloud` |
 
