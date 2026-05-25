@@ -1,21 +1,29 @@
 model_list:
-  # ── claude-local: 8asus qwen3-coder-next GPU 페어별 분산 (GPU 0-5, 3인스턴스 full GPU) ──
-  - model_name: qwen3-coder-next   # GPU 0-1
+  # ── claude-local: 8asus 코드 인스턴스 ──────────────────────────────────────
+  # GPU 0-1-2: qwen3-coder-next 80B (3GPU, CPU 오프로드 없음)
+  - model_name: qwen3-coder-next
     litellm_params:
       model: openai/qwen3-coder-next
       api_base: http://8asus:11434/v1
       api_key: ollama
 
-  - model_name: qwen3-coder-next   # GPU 2-3
+  # GPU 3,4,5: qwen2.5-coder-32b Q4_K_M (단일 GPU 각각, 고속)
+  - model_name: qwen3-coder-next   # GPU 3
     litellm_params:
-      model: openai/qwen3-coder-next
+      model: openai/qwen2.5-coder:32b
       api_base: http://8asus:11435/v1
       api_key: ollama
 
-  - model_name: qwen3-coder-next   # GPU 4-5
+  - model_name: qwen3-coder-next   # GPU 4
     litellm_params:
-      model: openai/qwen3-coder-next
+      model: openai/qwen2.5-coder:32b
       api_base: http://8asus:11436/v1
+      api_key: ollama
+
+  - model_name: qwen3-coder-next   # GPU 5
+    litellm_params:
+      model: openai/qwen2.5-coder:32b
+      api_base: http://8asus:11437/v1
       api_key: ollama
 
   # ── claude-reason: CyberSecurity-2G qwq:32b (GPU 0 / GPU 1) ─────────────
