@@ -190,6 +190,37 @@ for i in 0 1 2; do
     ok "    GPU 페어 $i (GPU $((i*2))-$((i*2+1)), 포트 ${PORT}) 시작됨"
 done
 
+# CyberSecurity-2G: GPU 0은 기존 ollama.service(qwq:32b), GPU 1에 두 번째 인스턴스 추가
+info "  CyberSecurity-2G — GPU 1에 qwq:32b 두 번째 인스턴스 설정 중 (포트 11435)..."
+
+# 기존 ollama.service에 CUDA_VISIBLE_DEVICES=0 명시 (GPU 1과 충돌 방지)
+ssh -p 8510 CyberSecurity-2G "grep -q 'CUDA_VISIBLE_DEVICES=0' /etc/systemd/system/ollama.service || sudo sed -i '/Environment=\"PATH=/a Environment=\"CUDA_VISIBLE_DEVICES=0\"' /etc/systemd/system/ollama.service"
+
+ssh -p 8510 CyberSecurity-2G "sudo tee /etc/systemd/system/ollama-gpu1.service > /dev/null" << 'UNIT'
+[Unit]
+Description=vibe-lab Ollama GPU-1 (qwq:32b second instance)
+After=network.target
+
+[Service]
+Type=simple
+User=ollama
+Environment="OLLAMA_MODELS=/media1/ollama/models"
+Environment="OLLAMA_NUM_CTX=16384"
+Environment="OLLAMA_FLASH_ATTN=1"
+Environment="CUDA_VISIBLE_DEVICES=1"
+Environment="OLLAMA_HOST=0.0.0.0:11435"
+ExecStart=/usr/local/bin/ollama serve
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+ssh -p 8510 CyberSecurity-2G "sudo systemctl daemon-reload && sudo ufw allow 11435/tcp 2>/dev/null || true"
+ssh -p 8510 CyberSecurity-2G "sudo systemctl enable ollama-gpu1 && sudo systemctl restart ollama && sudo systemctl start ollama-gpu1"
+ok "    CyberSecurity-2G GPU 1 (포트 11435) 시작됨"
+
 # ── Step 6: 방화벽 확인 (포트 11434) ──
 info "방화벽 확인 중 (포트 11434)..."
 
