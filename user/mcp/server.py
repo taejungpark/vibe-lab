@@ -37,12 +37,17 @@ async def _chat(role: str, messages: list[dict]) -> str:
 
 
 @mcp.tool()
-async def reason(prompt: str) -> str:
+async def reason(prompt: str, spec: str = "") -> str:
     """
     CyberSecurity-2G의 qwq:32b로 설계/아키텍처/추론 작업을 수행합니다.
     복잡한 문제 분석, 기술 설계, 트레이드오프 검토에 사용하세요.
+    spec에 설계 명세 문서(*.md 내용 등)를 넘기면 system 컨텍스트로 처리됩니다.
     """
-    return await _chat("reason", [{"role": "user", "content": prompt}])
+    messages = []
+    if spec:
+        messages.append({"role": "system", "content": f"설계 명세:\n{spec}"})
+    messages.append({"role": "user", "content": prompt})
+    return await _chat("reason", messages)
 
 
 @mcp.tool()
@@ -59,16 +64,24 @@ async def code(prompt: str, context: str = "") -> str:
 
 
 @mcp.tool()
-async def reason_then_code(prompt: str) -> str:
+async def reason_then_code(prompt: str, spec: str = "") -> str:
     """
     자동 파이프라인: qwq:32b로 설계 후 qwen3-coder-next로 구현합니다.
     중간 검토 없이 한 번에 처리합니다. 검토가 필요하면 reason → code를 따로 호출하세요.
+    spec에 설계 명세 문서(*.md 내용 등)를 넘기면 reason과 code 양쪽에 전달됩니다.
     """
-    reasoning = await _chat("reason", [{"role": "user", "content": prompt}])
-    implementation = await _chat("code", [
-        {"role": "system", "content": f"설계 추론:\n{reasoning}"},
-        {"role": "user", "content": prompt},
-    ])
+    reason_messages = []
+    if spec:
+        reason_messages.append({"role": "system", "content": f"설계 명세:\n{spec}"})
+    reason_messages.append({"role": "user", "content": prompt})
+    reasoning = await _chat("reason", reason_messages)
+
+    code_messages = []
+    if spec:
+        code_messages.append({"role": "system", "content": f"설계 명세:\n{spec}"})
+    code_messages.append({"role": "system", "content": f"설계 추론:\n{reasoning}"})
+    code_messages.append({"role": "user", "content": prompt})
+    implementation = await _chat("code", code_messages)
     return f"## 추론\n\n{reasoning}\n\n## 구현\n\n{implementation}"
 
 

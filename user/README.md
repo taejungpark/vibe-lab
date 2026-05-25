@@ -87,11 +87,13 @@ claude-cloud   # Anthropic API — 유료 Claude (최고 품질)
 
 ### vibe-lab 도구 (GPU 클러스터 오케스트레이션)
 
-| 도구 | 실행 서버 | 모델 | 용도 |
-|------|----------|------|------|
-| `reason` | CyberSecurity-2G | qwq:32b | 설계, 아키텍처, 문제 분석 |
-| `code` | 8asus | qwen3-coder-next | 코드 구현 |
-| `reason_then_code` | cyber2 → 8asus | 파이프라인 | 자동 설계 후 구현 |
+| 도구 | 실행 서버 | 모델 | 파라미터 | 용도 |
+|------|----------|------|---------|------|
+| `reason` | CyberSecurity-2G | qwq:32b | `prompt`, `spec?` | 설계, 아키텍처, 문제 분석 |
+| `code` | 8asus | qwen3-coder-next | `prompt`, `context?` | 코드 구현 |
+| `reason_then_code` | cyber2 → 8asus | 파이프라인 | `prompt`, `spec?` | 자동 설계 후 구현 |
+
+#### 기본 사용
 
 ```
 # 명시적 분리 (설계 검토 후 구현)
@@ -100,6 +102,34 @@ claude-cloud   # Anthropic API — 유료 Claude (최고 품질)
 
 # 자동 파이프라인
 "reason_then_code로 파일 캐시 모듈 만들어줘"
+```
+
+#### 설계 명세 파일 활용 (`spec` 파라미터)
+
+`reason`과 `reason_then_code`의 `spec` 파라미터에 `.md` 파일 내용을 넘기면
+설계 명세가 system 컨텍스트로 전달됩니다.
+
+**사용 방법:** Claude Code가 파일을 읽어서 `spec`에 넘기도록 지시합니다.
+
+```
+SPEC.md를 읽어서 spec에 넣고 reason 도구로 트레이드오프를 분석해줘
+```
+
+```
+SPEC.md 내용을 spec으로, reason_then_code로 인증 모듈 구현해줘
+```
+
+**`reason_then_code`에서 spec은 reason과 code 양쪽에 전달됩니다.**
+설계 명세가 추론 단계와 구현 단계 모두에 일관되게 반영됩니다.
+
+**단계적 검토가 필요한 경우:**
+
+```
+# 1단계: 명세 기반 설계 분석
+SPEC.md를 읽어서 spec에 넣고 reason 도구로 구현 전략을 설계해줘
+
+# 2단계: 설계 결과 확인 후 구현 지시
+위 reason 결과를 context로, code 도구로 auth.py를 구현해줘
 ```
 
 ### Google Drive 도구 (✔ 연결됨)
