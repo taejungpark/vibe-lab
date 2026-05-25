@@ -13,9 +13,10 @@ This is the **vibe-lab** release package — a deployment kit for running Claude
 
 ```
 User Workstation (Claude Code)
-  ├─ claude-local  → LiteLLM :4000  qwen3-coder-next LB  (8asus GPU 0-5, 2GPU/instance, max 3 users)
-  ├─ claude-reason → cyber2:11434   qwq:32b              (reasoning/design)
-  └─ claude-cloud  → Anthropic API  paid Claude          (highest quality)
+  ├─ claude-local    → LiteLLM :4000  qwen2.5-coder-32b LB  (8asus GPU 3-5, 1GPU/instance, max 3 users, ~30 t/s)
+  ├─ claude-highend  → LiteLLM :4000  qwen3-coder-next 80B  (8asus GPU 0-1-2, single instance, ~66 t/s)
+  ├─ claude-reason   → cyber2:11434   qwq:32b               (reasoning/design)
+  └─ claude-cloud    → Anthropic API  paid Claude            (highest quality)
 
 MCP Server (stdio, runs on user's machine)
   ├─ reason          → CyberSecurity-2G / qwq:32b   (600s timeout)
@@ -105,7 +106,8 @@ Agents in `user/agents/` use YAML frontmatter with `name`, `description`, `model
 
 | Situation | Use |
 |-----------|-----|
-| General coding (up to 3 concurrent, full GPU) | `claude-local` |
+| General coding (up to 3 concurrent) | `claude-local` |
+| Complex coding, large refactors | `claude-highend` |
 | Architecture / complex reasoning | `claude-reason` |
 | Highest quality needed | `claude-cloud` |
 

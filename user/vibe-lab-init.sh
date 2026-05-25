@@ -141,13 +141,19 @@ ${CLOUD_ALIAS}
 LITELLM_URL="http://${LITELLM_SERVER}:4000"
 LITELLM_KEY="vibe-lab"
 
-# 로컬 모델 — qwen3-coder-next 로드밸런싱 (8asus GPU 0-5, 최대 6명 동시)
+# 로컬 모델 — qwen2.5-coder-32b 로드밸런싱 (8asus GPU 3-5, 최대 3명 동시, ~30 t/s)
 alias claude-local='ANTHROPIC_AUTH_TOKEN="\${LITELLM_KEY}" \\
+  ANTHROPIC_BASE_URL="\${LITELLM_URL}" \\
+  ANTHROPIC_API_KEY="\${LITELLM_KEY}" \\
+  claude --model qwen2.5-coder-32b'
+
+# 고성능 모델 — qwen3-coder-next 80B (8asus GPU 0-1-2, 단독, ~66 t/s)
+alias claude-highend='ANTHROPIC_AUTH_TOKEN="\${LITELLM_KEY}" \\
   ANTHROPIC_BASE_URL="\${LITELLM_URL}" \\
   ANTHROPIC_API_KEY="\${LITELLM_KEY}" \\
   claude --model qwen3-coder-next'
 
-# 로컬 모델 — cyber2 QwQ-32B (추론/설계)
+# 추론 모델 — cyber2 QwQ-32B (추론/설계)
 alias claude-reason='ANTHROPIC_AUTH_TOKEN=ollama \\
   ANTHROPIC_BASE_URL="http://${REASONING_SERVER}:${OLLAMA_PORT}" \\
   ANTHROPIC_API_KEY="" \\
@@ -156,7 +162,7 @@ alias claude-reason='ANTHROPIC_AUTH_TOKEN=ollama \\
 # <<< vibe-lab 설정 <<<
 ALIASES
 
-ok "alias 추가됨: claude-cloud, claude-local, claude-reason"
+ok "alias 추가됨: claude-cloud, claude-local, claude-highend, claude-reason"
 
 # ── Step 5: Claude Code settings.json ──
 info "Claude Code settings.json 설정 중..."
@@ -320,7 +326,8 @@ echo "  새 터미널을 열거나:"
 echo -e "    ${CYAN}source ${SHELL_RC}${NC}"
 echo ""
 echo "  사용법:"
-echo -e "    ${CYAN}claude-local${NC}    Qwen3-Coder-Next LB (8asus GPU 0-5, 최대 3명 동시)"
+echo -e "    ${CYAN}claude-local${NC}     Qwen2.5-Coder-32B LB (8asus GPU 3-5, 최대 3명 동시, ~30 t/s)"
+echo -e "    ${CYAN}claude-highend${NC}  Qwen3-Coder-Next 80B (8asus GPU 0-1-2, 단독, ~66 t/s)"
 echo -e "    ${CYAN}claude-reason${NC}   cyber2 QwQ-32B (추론/설계)"
 if [ "$ANTHROPIC_API_KEY" != "skip" ]; then
 echo -e "    ${CYAN}claude-cloud${NC}    유료 Claude (Opus/Sonnet)"
