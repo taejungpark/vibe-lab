@@ -40,5 +40,4 @@ litellm_settings:
   callbacks:
     - hooks.drop_thinking_hook
 
-general_settings:
-  master_key: "vibe-lab"
+general_settings: {}
