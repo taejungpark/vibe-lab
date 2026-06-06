@@ -37,6 +37,8 @@ router_settings:
 litellm_settings:
   drop_params: true
   request_timeout: 600
+  callbacks:
+    - hooks.drop_thinking_hook
 
 general_settings:
   master_key: "vibe-lab"
