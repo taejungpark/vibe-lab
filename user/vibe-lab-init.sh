@@ -149,15 +149,13 @@ LITELLM_URL="http://${LITELLM_SERVER}:4000"
 LITELLM_KEY="vibe-lab"
 
 # 로컬 모델 — qwen3-coder-next 80B 로드밸런싱 (8asus GPU 0-2 / 3-5, 최대 2명 동시, ~66 t/s)
-alias claude-local='ANTHROPIC_AUTH_TOKEN="\${LITELLM_KEY}" \\
-  ANTHROPIC_BASE_URL="\${LITELLM_URL}" \\
+alias claude-local='ANTHROPIC_BASE_URL="\${LITELLM_URL}" \\
   ANTHROPIC_API_KEY="\${LITELLM_KEY}" \\
   claude --model qwen3-coder-next'
 
 # 추론 모델 — cyber2 QwQ-32B (추론/설계)
-alias claude-reason='ANTHROPIC_AUTH_TOKEN=ollama \\
-  ANTHROPIC_BASE_URL="http://${REASONING_SERVER}:${OLLAMA_PORT}" \\
-  ANTHROPIC_API_KEY="" \\
+alias claude-reason='ANTHROPIC_BASE_URL="http://${REASONING_SERVER}:${OLLAMA_PORT}" \\
+  ANTHROPIC_API_KEY="ollama" \\
   claude --model qwq:32b'
 
 # <<< vibe-lab 설정 <<<
