@@ -88,7 +88,13 @@ for entry in "${DEPLOYMENTS[@]}"; do
         ok "  $server — 이미 설치됨 ($ollama_ver)"
     else
         info "  $server — 설치 중..."
-        $SSH "$server" "curl -fsSL https://ollama.com/install.sh | sh" 2>/dev/null
+        # ollama.com/install.sh는 구 버전 URL(.tgz)을 참조해 실패할 수 있으므로
+        # GitHub releases에서 직접 다운로드
+        OLLAMA_VER=$($SSH "$server" "curl -sf https://api.github.com/repos/ollama/ollama/releases/latest | python3 -c \"import sys,json; print(json.load(sys.stdin)['tag_name'])\" 2>/dev/null || echo 'v0.30.6'")
+        $SSH "$server" "curl -fsSL https://github.com/ollama/ollama/releases/download/${OLLAMA_VER}/ollama-linux-amd64.tar.zst -o /tmp/ollama.tar.zst && \
+            sudo tar --use-compress-program=unzstd -xf /tmp/ollama.tar.zst -C /usr/local && \
+            sudo mkdir -p /usr/local/lib/ollama && \
+            rm -f /tmp/ollama.tar.zst" 2>/dev/null
         if $SSH "$server" "ollama --version" &>/dev/null; then
             ok "  $server — 설치 완료"
         else
@@ -227,7 +233,59 @@ ssh -p 8510 CyberSecurity-2G "sudo systemctl daemon-reload && sudo ufw allow 114
 ssh -p 8510 CyberSecurity-2G "sudo systemctl enable ollama-gpu1 && sudo systemctl restart ollama && sudo systemctl start ollama-gpu1"
 ok "    CyberSecurity-2G GPU 1 (포트 11435) 시작됨"
 
-# ── Step 6: 방화벽 확인 (포트 11434) ──
+# ── Step 6: LiteLLM 로드밸런서 설치 (로컬 머신) ──
+info "LiteLLM 로드밸런서 설치 중 (로컬)..."
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LITELLM_CONFIG="$(realpath "$SCRIPT_DIR/../litellm/config.yaml")"
+LITELLM_WORKDIR="$(realpath "$SCRIPT_DIR/../litellm")"
+CURRENT_USER="$(whoami)"
+CONDA_BASE="$(conda info --base 2>/dev/null || echo "/home/${CURRENT_USER}/.conda")"
+LITELLM_BIN="${CONDA_BASE}/envs/litellm-vibe/bin/litellm"
+
+# conda env + litellm 설치
+if [ ! -f "$LITELLM_BIN" ]; then
+    info "  litellm-vibe conda 환경 생성 중..."
+    conda create -n litellm-vibe python=3.11 -y -q
+    "${CONDA_BASE}/envs/litellm-vibe/bin/pip" install -q "litellm[proxy]"
+    ok "  litellm 설치 완료"
+else
+    ok "  litellm-vibe 이미 설치됨 ($($LITELLM_BIN --version 2>/dev/null || echo 'unknown'))"
+fi
+
+# systemd 서비스 파일 생성
+sudo tee /etc/systemd/system/litellm-vibe.service > /dev/null << SVCEOF
+[Unit]
+Description=vibe-lab LiteLLM Load Balancer
+After=network.target
+
+[Service]
+Type=simple
+User=${CURRENT_USER}
+WorkingDirectory=${LITELLM_WORKDIR}
+ExecStart=${LITELLM_BIN} \\
+  --config ${LITELLM_CONFIG} \\
+  --port 4000 \\
+  --host 0.0.0.0
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+SVCEOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable litellm-vibe
+sudo systemctl restart litellm-vibe
+
+sleep 3
+if curl -sf --max-time 5 http://localhost:4000/health -H "Authorization: Bearer vibe-lab" &>/dev/null; then
+    ok "  LiteLLM :4000 — 실행 중"
+else
+    warn "  LiteLLM :4000 — 아직 시작 중 (로그: journalctl -u litellm-vibe)"
+fi
+
+# ── Step 7: 방화벽 확인 (포트 11434) ──
 info "방화벽 확인 중 (포트 11434)..."
 
 for entry in "${DEPLOYMENTS[@]}"; do
@@ -250,7 +308,7 @@ for entry in "${DEPLOYMENTS[@]}"; do
     fi
 done
 
-# ── Step 7: Tool Calling 테스트 ──
+# ── Step 8: Tool Calling 테스트 ──
 info "Tool Calling 테스트 중..."
 
 for entry in "${DEPLOYMENTS[@]}"; do
