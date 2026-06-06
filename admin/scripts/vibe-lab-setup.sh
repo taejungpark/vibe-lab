@@ -240,14 +240,25 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LITELLM_CONFIG="$(realpath "$SCRIPT_DIR/../litellm/config.yaml")"
 LITELLM_WORKDIR="$(realpath "$SCRIPT_DIR/../litellm")"
 CURRENT_USER="$(whoami)"
-CONDA_BASE="$(conda info --base 2>/dev/null || echo "/home/${CURRENT_USER}/.conda")"
-LITELLM_BIN="${CONDA_BASE}/envs/litellm-vibe/bin/litellm"
 
 # conda env + litellm 설치
-if [ ! -f "$LITELLM_BIN" ]; then
+# conda env list로 실제 경로를 찾아 사용 (CONDA_BASE/envs와 다를 수 있음)
+_find_conda_env() {
+    conda env list 2>/dev/null | awk '/litellm-vibe/ {print $NF}'
+}
+LITELLM_ENV_PATH="$(_find_conda_env)"
+
+if [ -z "$LITELLM_ENV_PATH" ]; then
     info "  litellm-vibe conda 환경 생성 중..."
     conda create -n litellm-vibe python=3.11 -y -q
-    "${CONDA_BASE}/envs/litellm-vibe/bin/pip" install -q "litellm[proxy]"
+    LITELLM_ENV_PATH="$(_find_conda_env)"
+fi
+
+LITELLM_BIN="${LITELLM_ENV_PATH}/bin/litellm"
+
+if [ ! -f "$LITELLM_BIN" ]; then
+    info "  litellm 설치 중..."
+    "${LITELLM_ENV_PATH}/bin/pip" install -q "litellm[proxy]"
     ok "  litellm 설치 완료"
 else
     ok "  litellm-vibe 이미 설치됨 ($($LITELLM_BIN --version 2>/dev/null || echo 'unknown'))"
