@@ -59,8 +59,13 @@ else
         }
     else
         err "Node.js/npm이 설치되어 있지 않습니다."
-        echo "  설치: curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -"
-        echo "         sudo apt-get install -y nodejs"
+        if [[ "$(uname -s)" == "Darwin" ]]; then
+            echo "  설치 (macOS): brew install node"
+            echo "         또는: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash && nvm install --lts"
+        else
+            echo "  설치 (Debian/Ubuntu): curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -"
+            echo "                         sudo apt-get install -y nodejs"
+        fi
         exit 1
     fi
 
@@ -92,7 +97,7 @@ info "Anthropic API 키 설정 (유료 Claude 모델용)..."
 
 existing_key=""
 if [ -f "$SHELL_RC" ]; then
-    existing_key=$(grep -oP 'ANTHROPIC_API_KEY="\K[^"]+' "$SHELL_RC" 2>/dev/null | head -1 || echo "")
+    existing_key=$(sed -n 's/.*ANTHROPIC_API_KEY="\([^"]*\)".*/\1/p' "$SHELL_RC" 2>/dev/null | head -1 || echo "")
 fi
 
 if [ -n "$existing_key" ] && [ "$existing_key" != "dummy" ] && [ "$existing_key" != "ollama" ]; then
@@ -120,7 +125,9 @@ fi
 info "Shell alias 설정 중..."
 
 if [ -f "$SHELL_RC" ]; then
-    sed -i '/# >>> vibe-lab 설정/,/# <<< vibe-lab 설정/d' "$SHELL_RC"
+    # macOS BSD sed와 GNU sed 모두에서 동작하도록 임시 파일 사용
+    tmp_rc=$(mktemp)
+    sed '/# >>> vibe-lab 설정/,/# <<< vibe-lab 설정/d' "$SHELL_RC" > "$tmp_rc" && mv "$tmp_rc" "$SHELL_RC"
 fi
 
 # claude-cloud alias (API 키가 있을 때만)
@@ -200,11 +207,13 @@ mkdir -p "$AGENTS_DIR"
 
 if [ -d "$AGENTS_SRC" ]; then
     cp "$AGENTS_SRC"/*.md "$AGENTS_DIR/" 2>/dev/null || true
-    agent_count=$(ls "$AGENTS_DIR"/*.md 2>/dev/null | wc -l)
+    agent_count=$(ls "$AGENTS_DIR"/*.md 2>/dev/null | wc -l | tr -d ' ')
     ok "${agent_count}개 에이전트 배포됨"
     for f in "$AGENTS_DIR"/*.md; do
-        name=$(grep -oP '^name:\s*\K.*' "$f" 2>/dev/null || basename "$f" .md)
-        model=$(grep -oP '^model:\s*\K.*' "$f" 2>/dev/null || echo "default")
+        name=$(sed -n 's/^name:[[:space:]]*//p' "$f" 2>/dev/null | head -1)
+        [ -z "$name" ] && name=$(basename "$f" .md)
+        model=$(sed -n 's/^model:[[:space:]]*//p' "$f" 2>/dev/null | head -1)
+        [ -z "$model" ] && model="default"
         echo "    - ${name} (model: ${model})"
     done
 else
@@ -219,7 +228,7 @@ mkdir -p "$COMMANDS_DIR"
 
 if [ -d "$COMMANDS_SRC" ]; then
     cp "$COMMANDS_SRC"/*.md "$COMMANDS_DIR/" 2>/dev/null || true
-    cmd_count=$(ls "$COMMANDS_DIR"/*.md 2>/dev/null | wc -l)
+    cmd_count=$(ls "$COMMANDS_DIR"/*.md 2>/dev/null | wc -l | tr -d ' ')
     ok "${cmd_count}개 커맨드 배포됨 (/debug, /unit-test)"
 else
     warn "커맨드 디렉토리 없음: $COMMANDS_SRC"
@@ -235,8 +244,8 @@ MCP_PYTHON=""
 if [ ! -f "$MCP_SERVER" ]; then
     warn "  MCP 서버 파일 없음: $MCP_SERVER — 건너뜀"
 else
-    # Python 3.10+ 탐색 (시스템)
-    for py in python3.12 python3.11 python3.10; do
+    # Python 3.10+ 탐색 (시스템) — macOS(brew python3.13), Linux(python3) 모두 커버
+    for py in python3.13 python3.12 python3.11 python3.10 python3; do
         if command -v "$py" &>/dev/null; then
             ver=$("$py" -c "import sys; print(sys.version_info >= (3,10))" 2>/dev/null)
             if [ "$ver" = "True" ]; then
@@ -271,8 +280,12 @@ else
 
         # 패키지 설치
         info "  mcp, httpx 패키지 설치 중..."
-        "$MCP_PYTHON" -m pip install mcp httpx -q 2>/dev/null
-        ok "  패키지 설치 완료"
+        if "$MCP_PYTHON" -m pip install mcp httpx -q; then
+            ok "  패키지 설치 완료"
+        else
+            warn "  pip 설치 실패 — MCP 서버를 사용하려면 수동 설치 필요:"
+            echo "    $MCP_PYTHON -m pip install mcp httpx"
+        fi
 
         # MCP 서버 등록
         if claude mcp list 2>/dev/null | grep -q "vibe-lab"; then
