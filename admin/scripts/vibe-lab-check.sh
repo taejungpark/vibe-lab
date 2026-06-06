@@ -23,9 +23,8 @@ echo -e "${BLUE}[Ollama 인스턴스]${NC}"
 
 # 형식: "서버|포트|모델|설명"
 declare -a SERVERS=(
-    "8asus|11434|qwen3-coder-next|코딩 LB (GPU 0-1, full)"
-    "8asus|11435|qwen3-coder-next|코딩 LB (GPU 2-3, full)"
-    "8asus|11436|qwen3-coder-next|코딩 LB (GPU 4-5, full)"
+    "8asus|11434|qwen3-coder-next|코딩 (GPU 0-2, triple@0)"
+    "8asus|11435|qwen3-coder-next|코딩 (GPU 3-5, triple@1)"
     "CyberSecurity-2G|11434|qwq:32b|추론/설계"
 )
 

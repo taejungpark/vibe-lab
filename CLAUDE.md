@@ -23,7 +23,7 @@ MCP Server (stdio, runs on user's machine)
   └─ reason_then_code → pipelines reason → code automatically
 ```
 
-Claude Code connects to Ollama via `ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN=ollama`. LiteLLM (port 4000) load-balances across the 8 per-GPU Ollama instances on 8asus (ports 11434–11441).
+Claude Code connects to Ollama via `ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN=ollama`. LiteLLM (port 4000) load-balances across 2 triple-GPU Ollama instances on 8asus (ports 11434–11435).
 
 ## Key Files
 
@@ -70,13 +70,9 @@ VIBE_PRIMARY=8asus VIBE_REASONING=CyberSecurity-2G ./vibe-lab-init.sh
 sudo systemctl restart litellm-vibe
 curl -s http://localhost:4000/v1/models -H "Authorization: Bearer vibe-lab" | python3 -m json.tool
 
-# 8asus GPU pair instance management
-ssh 8asus "sudo systemctl restart ollama-pair@1"
-ssh 8asus "journalctl -u 'ollama-pair@*' --no-pager -n 20"
-
-# Yield GPUs 6-7 to DL research and reclaim
-ssh 8asus "sudo systemctl stop ollama-pair@3"
-ssh 8asus "sudo systemctl start ollama-pair@3"
+# 8asus GPU triple instance management (GPU 0-2: triple@0, GPU 3-5: triple@1, GPU 6-7: DL research)
+ssh 8asus "sudo systemctl restart 'ollama-triple@0' 'ollama-triple@1'"
+ssh 8asus "journalctl -u 'ollama-triple@*' --no-pager -n 20"
 ```
 
 All SSH connections use port 8510. SSH config must have `Port 8510` for the host aliases.
