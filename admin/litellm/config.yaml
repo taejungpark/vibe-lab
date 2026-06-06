@@ -6,6 +6,7 @@ model_list:
       api_base: http://8asus:11434/v1
       api_key: ollama
       drop_params: true
+      fake_stream: true
 
   - model_name: qwen3-coder-next   # GPU 3-4-5
     litellm_params:
@@ -13,6 +14,7 @@ model_list:
       api_base: http://8asus:11435/v1
       api_key: ollama
       drop_params: true
+      fake_stream: true
 
   # ── claude-reason: CyberSecurity-2G qwq:32b (GPU 0 / GPU 1) ─────────────
   - model_name: qwq:32b   # GPU 0
