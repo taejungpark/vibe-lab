@@ -176,6 +176,7 @@ fi
 
 cat > "$SETTINGS_FILE" << 'SETTINGS'
 {
+  "thinkingEnabled": false,
   "permissions": {
     "allow": [
       "Bash(grep:*)",
