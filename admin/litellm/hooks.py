@@ -30,6 +30,14 @@ class DropThinkingHook(CustomLogger):
             data["extra_body"].pop("thinking", None)
             data["extra_body"].pop("budget_tokens", None)
 
+        # qwen3-coder-next는 대화가 num_ctx에 가까워지면 출력 생성 중 컨텍스트가
+        # 넘쳐 무한 반복(runaway)에 빠짐. Claude Code 기본 출력 상한(128k)을 그대로
+        # 두면 폭주가 128k까지 진행되어 세션이 깨짐. 출력 토큰을 안전 상한으로 클램프.
+        if data.get("model", "").startswith("qwen3-coder"):
+            MAX_OUT = 16384
+            if isinstance(data.get("max_tokens"), int) and data["max_tokens"] > MAX_OUT:
+                data["max_tokens"] = MAX_OUT
+
         return data
 
 

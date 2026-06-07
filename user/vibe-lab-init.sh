@@ -151,7 +151,7 @@ LITELLM_KEY="vibe-lab"
 # 로컬 모델 — qwen3-coder-next 80B 로드밸런싱 (8asus GPU 0-2 / 3-5, 최대 2명 동시, ~66 t/s)
 alias claude-local='ANTHROPIC_BASE_URL="\${LITELLM_URL}" \\
   ANTHROPIC_API_KEY="\${LITELLM_KEY}" \\
-  CLAUDE_CODE_MAX_OUTPUT_TOKENS=200000 \\
+  CLAUDE_CODE_MAX_OUTPUT_TOKENS=16384 \\
   claude --model qwen3-coder-next'
 
 # 추론 모델 — cyber2 QwQ-32B (추론/설계)
