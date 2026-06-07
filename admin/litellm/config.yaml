@@ -37,6 +37,7 @@ router_settings:
 litellm_settings:
   drop_params: true
   request_timeout: 600
+  use_chat_completions_url_for_anthropic_messages: true
   callbacks:
     - hooks.drop_thinking_hook
 
