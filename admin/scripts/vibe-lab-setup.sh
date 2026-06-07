@@ -182,7 +182,9 @@ After=network.target
 Type=simple
 User=ollama
 Environment="OLLAMA_MODELS=/usr/share/ollama/.ollama/models"
-Environment="OLLAMA_CONTEXT_LENGTH=16384"
+# Claude Code는 58개 툴 스키마 + 시스템 프롬프트로 ~26k 토큰을 보냄.
+# 16384이면 입력이 잘려 툴 호출이 깨지므로 32768로 설정 (Q5_K_M 80B + KV 캐시 ≈ 61GB, GPU 3개 73.5GB 내).
+Environment="OLLAMA_CONTEXT_LENGTH=32768"
 Environment="OLLAMA_FLASH_ATTN=1"
 ExecStart=/bin/bash -c 'CUDA_VISIBLE_DEVICES=$((%i*3)),$((  %i*3+1)),$((  %i*3+2)) OLLAMA_HOST=0.0.0.0:$((11434+%i)) exec /usr/local/bin/ollama serve'
 Restart=on-failure
